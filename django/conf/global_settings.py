@@ -591,3 +591,8 @@ STATICFILES_FINDERS = (
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
+
+# The import name of the WSGI application.  If this is `None` the default
+# WSGIHandler inside the django.core.handlers.wsgi module is used and
+# instanciated.  Otherwise this shall point to an actual WSGI application.
+WSGI_APPLICATION = None

@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from pprint import pformat
 import sys
 from threading import Lock
@@ -14,6 +16,7 @@ from django.core.urlresolvers import set_script_prefix
 from django.utils import datastructures
 from django.utils.encoding import force_unicode, iri_to_uri
 from django.utils.log import getLogger
+from django.utils.importlib import import_module
 
 logger = getLogger('django.request')
 
@@ -259,3 +262,29 @@ class WSGIHandler(base.BaseHandler):
         start_response(status, response_headers)
         return response
 
+
+_wsgi_application = None
+_wsgi_application_lock = Lock()
+
+def get_wsgi_application():
+    """This function returns the configured WSGI application for the
+    Django project.
+    """
+    global _wsgi_application
+    if _wsgi_application is not None:
+        return _wsgi_application
+
+    with _wsgi_application_lock:
+        if _wsgi_application is not None:
+            return _wsgi_application
+
+        from django.conf import settings
+        wsgi_app_import_name = settings.WSGI_APPLICATION
+        if wsgi_app_import_name is None:
+            app = WSGIHandler()
+        else:
+            wsgi_app_import_name, attr = wsgi_app_import_name.rsplit('.', 1)
+            mod = import_module(wsgi_app_import_name)
+            app = getattr(mod, attr)
+        _wsgi_application = app
+        return app
